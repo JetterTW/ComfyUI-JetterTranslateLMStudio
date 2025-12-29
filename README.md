@@ -38,7 +38,7 @@ negative prompt - 整段直接交給模型翻譯
 
 ``` bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/<YOUR_GITHUB>/<REPO_NAME>.git
+git clone https://github.com/JetterTW/ComfyUI-JetterTranslateLMStudio.git
 ```
 
 ------------------------------------------------------------------------
