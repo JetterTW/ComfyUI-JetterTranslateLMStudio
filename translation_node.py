@@ -83,14 +83,27 @@ def _translate(base_url: str, api_key: str, model: str, text: str, target: str) 
         user_msg = f"Translate the following into English:\n\n{text}"
         return _lmstudio_chat(base_url, api_key, model, system_msg, user_msg)
 
+    if target == "zh-CN":
+        system_msg = (
+            "你是一個嚴格的翻譯引擎。\n"
+            "你的唯一任務是把輸入內容翻譯成「簡體中文」。\n"
+            "規則：\n"
+            "1) 保留原本的標點與換行。\n"
+            "2) 任何像 [[DNT_0]] 的佔位符必須完全保留。\n"
+            "3) 不要解釋，不要補充，只輸出翻譯結果。\n"
+        )
+        user_msg = f"請翻譯成簡體中文：\n\n{text}"
+        return _lmstudio_chat(base_url, api_key, model, system_msg, user_msg)
+
     raise ValueError(f"Unknown target: {target}")
 
 class JetterTranslatePositiveWhole:
     """
-    Positive 整段翻譯（LM Studio）
+    Positive 整段翻譯
     模式：
       1) EN/ZH-CN → ZH-TW
       2) ZH → EN
+      3) ZH-TW → ZH-CN
     """
 
     @classmethod
@@ -98,7 +111,7 @@ class JetterTranslatePositiveWhole:
         return {
             "required": {
                 "positive": ("STRING", {"multiline": True, "default": ""}),
-                "mode": (["EN/ZH-CN → ZH-TW", "ZH → EN"],),
+                "mode": (["EN/ZH-CN → ZH-TW", "ZH → EN", "ZH-TW → ZH-CN"],),
                 "lmstudio_base": ("STRING", {"default": "http://127.0.0.1:1234/v1"}),
                 "api_key": ("STRING", {"default": "lmstudio"}),
                 "model": ("STRING", {"default": "qwen/qwen3-vl-8b"}),
@@ -126,8 +139,10 @@ class JetterTranslatePositiveWhole:
             # 已是繁中就略過（可選）
             if skip_if_traditional == "Yes" and _looks_like_traditional_zh(text):
                 return (text,)
-        else:
+        elif mode == "ZH → EN":
             target = "en"
+        elif mode == "ZH-TW → ZH-CN":
+            target = "zh-CN"
             # 這個模式不需要 skip_if_traditional（保留參數但不使用）
 
         protected, mapping = _protect_tokens(text, do_not_translate)
